@@ -3,7 +3,7 @@
 
 #include <Token.cpp>
 #include "../include/TokenType.h"
-
+#include "Glyphcast.cpp"
 class Scanner{
 private:
     std::string Source;
@@ -44,7 +44,24 @@ public:
         case '+': addToken(TokenType::PLUS); break;
         case ';': addToken(TokenType::SEMICOLON); break;
         case '*': addToken(TokenType::STAR); break;
+        case '!': addToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG); break;
+        case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL); break;
+        case '<': addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS); break;
+        case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); break;
+
+        default : error(line, "Unexpected character."); break;
         }
+    }
+
+    bool match (char expected){
+        if (isAtEnd){
+            return false;
+        }
+        if (Source.at(current) != expected){
+            return false;
+        }
+        current ++;
+        return true;
     }
 
     char advance(){
