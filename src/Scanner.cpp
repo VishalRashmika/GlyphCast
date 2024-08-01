@@ -48,13 +48,49 @@ public:
         case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL); break;
         case '<': addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS); break;
         case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); break;
+        case ' ':
+        case '\r':
+        case '\t':
+        case '\n': line++; break;
+
+        case '/':
+            if (match('/')) {
+                // tning to do
+                while(peek() != '\n' && );
+            } else {
+                addToken(TokenType::SLASH);
+            }
+        break;
+
+        case '"': string(); break;
 
         default : error(line, "Unexpected character."); break;
         }
     }
 
+    void Scanner::string()
+    {
+        while (peek() != '"' && !isAtEnd()) {
+            if (peek() == '\n') {
+                ++line;
+            }
+            advance();
+        }
+
+        // Unterminated string
+        if (isAtEnd()) {
+            error(line, "Unterminated string.");
+        }
+
+        advance(); // the closing '"'
+
+        // Trim the surrounding quotes
+        addToken(TokenType::STRING, Source.substr(start + 1, current - start - 2));
+    }
+
+
     bool match (char expected){
-        if (isAtEnd){
+        if (isAtEnd()){
             return false;
         }
         if (Source.at(current) != expected){
@@ -62,6 +98,13 @@ public:
         }
         current ++;
         return true;
+    }
+
+    char peek() {
+        if (isAtEnd()) {
+            return '\0';
+        }
+        return Source.at(current);
     }
 
     char advance(){
