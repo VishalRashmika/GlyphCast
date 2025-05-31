@@ -17,7 +17,6 @@ std::vector<Token> Scanner::scanTokens(){
     return tokens;
 }
 
-
 void Scanner::scanToken(){
     char character = advance();
     switch (character)

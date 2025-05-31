@@ -1,11 +1,10 @@
 #pragma once
 
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-
 #include "TokenType.h"
 #include "Token.h"
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 class Scanner{
 private:
@@ -34,9 +33,7 @@ private:
     int current {0};
     int line {1};
 
-    // functions
     void scanToken();
-
     void addToken(TokenType _type);
     void addToken(TokenType _type, std::any _literal);
     bool isAtEnd();
@@ -47,8 +44,6 @@ private:
     char peekNext();
     char advance();
     bool match(char _expected);
-
-    //todo: functions
     void identifier();
     void number();
     void string();

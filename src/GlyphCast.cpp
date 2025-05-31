@@ -1,17 +1,10 @@
+
+#include "GlyphCast.h"
+#include "sysexits.h"
+#include "Scanner.h"
 #include <iostream>
 #include <fstream>
 
-#include "sysexits.h"
-#include "Scanner.h"
-#include "GlyphCast.h"
-
-// function prototypes
-// void runFile(std::string filePath);
-// void runPrompt();
-// void run(std::string source);
-// void report(int line, std::string where, std::string message);
-
-// bool hadError = false;
 bool GlyphCast::hadError = false;
 
 int main(int argc, char* argv[]){
