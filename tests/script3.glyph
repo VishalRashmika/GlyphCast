@@ -1,0 +1,11 @@
+// Test if-else, logical operators, and comparison
+var x = 10;
+
+if (x > 5 and x < 15) {
+  print "x is between 5 and 15";
+} else {
+  print "x is out of range";
+}
+
+print x != 0;    // true
+print !(x == 10); // false

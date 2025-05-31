@@ -1,0 +1,16 @@
+// Test classes, inheritance, methods, this, and super
+class Animal {
+  fun speak() {
+    print "Animal speaks";
+  }
+}
+
+class Dog < Animal {
+  fun speak() {
+    super.speak();
+    print "Dog barks";
+  }
+}
+
+var dog = Dog();
+dog.speak();

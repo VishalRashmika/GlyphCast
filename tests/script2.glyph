@@ -1,0 +1,6 @@
+// Test function declaration and calling
+fun add(x, y) {
+  return x + y;
+}
+
+print add(5, 7); // 12

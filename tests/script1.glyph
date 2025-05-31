@@ -1,0 +1,9 @@
+// Test variables and basic arithmetic
+var a = 10;
+var b = 20;
+var sum = a + b;
+print sum;          // 30
+print "Hello, LOX!"; // String literal
+print true;          // boolean literal
+print false;         // boolean literal
+print nil;           // nil literal
