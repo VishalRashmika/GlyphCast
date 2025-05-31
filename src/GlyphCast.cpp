@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include "sysexits.h"
+#include "Scanner.h"
 
 // function prototypes
 void runFile(std::string filePath);
@@ -42,5 +43,5 @@ void runPrompt(){
 }
 
 void run(std::string source){
-
+    Scanner scammer {source};
 }
