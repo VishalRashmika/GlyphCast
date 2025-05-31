@@ -3,45 +3,71 @@
 
 #include "sysexits.h"
 #include "Scanner.h"
+#include "GlyphCast.h"
 
 // function prototypes
-void runFile(std::string filePath);
-void runPrompt();
-void run(std::string source);
+// void runFile(std::string filePath);
+// void runPrompt();
+// void run(std::string source);
+// void report(int line, std::string where, std::string message);
+
+// bool hadError = false;
+bool GlyphCast::hadError = false;
 
 int main(int argc, char* argv[]){
+    GlyphCast glyph;
     if (argc > 2){
         std::cerr << "Usage: glyph [script]" << std::endl;
         exit(EX_USAGE);
     }
     else if (argc == 2){
-        runFile(argv[1]);
+        glyph.runFile(argv[1]);
     }
     else{
-        runPrompt();
+        glyph.runPrompt();
     }
 
     return 0;
 }   
 
-void runFile(std::string filePath){
+void GlyphCast::runFile(std::string filePath){
     std::ifstream inputFile(filePath);
     std::string fileData;
 
-    while(getline(inputFile,fileData)){std::cout << fileData << std::endl;}
+    while(getline(inputFile,fileData)){}
     std::cout << "File Loaded Successfully" << std::endl;
     run(fileData);
-    // todo:if had error exit
-}
-
-void runPrompt(){
-    std::string command;
-    while(std::getline(std::cin, command)){
-        run(command);
-        // todo:haderror = false;
+    
+    if(hadError){
+        exit(EX_DATAERR);
     }
 }
 
-void run(std::string source){
+void GlyphCast::runPrompt(){
+    while (true) {
+        std::cout << "> ";
+        std::string command;
+        if (!std::getline(std::cin, command)) break;
+
+        run(command);
+        hadError = false;
+    }
+}
+
+void GlyphCast::run(std::string source){
     Scanner scammer {source};
+    std::vector<Token> tokens = scammer.scanTokens();
+
+    for (int i = 0; i < tokens.size(); i++){
+        std::cout << tokens[i].toString() << std::endl;
+    }
+}
+
+void GlyphCast::error(int line, std::string message){
+    report(line, "", message);
+}
+
+void GlyphCast::report(int line, std::string where, std::string message){
+    std::cerr << "[line " << line << "] Error" << where << ": " << message << std::endl;
+    hadError = true;
 }
