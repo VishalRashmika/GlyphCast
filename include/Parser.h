@@ -4,11 +4,42 @@
 #include "Expr.h"
 
 #include <vector>
+#include <string>
+#include <stdexcept> 
 
 class Parser{
-public:
+private:
     std::vector<Token> tokens;
     int current = 0;
 
+    class ParseError : public std::runtime_error {
+    public:
+        ParseError(std::string& message) : std::runtime_error(message) {} 
+    };
+    
+    Expr* expression();
+    Expr* equality();
+    Expr* comparison();
+    Expr* term();
+    Expr* factor();
+    Expr* unary();
+    Expr* primary();
+    bool match(TokenType type);
+    Token consume(TokenType type, std::string message);
+    bool check(TokenType type);
+    Token advance();
+    bool isAtEnd();
+    Token peek();
+    Token previous();
+    ParseError error(Token token, std::string message);
+    void synchronize();
+    
+    //multiple token types
+    template<typename... T>
+    bool match(TokenType first, T... rest);
+
+
+public:
     Parser(std::vector<Token> tokens);
+    Expr* parse();
 };
