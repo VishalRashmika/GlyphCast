@@ -2,6 +2,10 @@
 #include "GlyphCast.h"
 #include "sysexits.h"
 #include "Scanner.h"
+#include "Parser.h"
+#include "Expr.h"
+#include "AstPrinter.h"
+
 #include <iostream>
 #include <fstream>
 
@@ -50,10 +54,12 @@ void GlyphCast::runPrompt(){
 void GlyphCast::run(std::string source){
     Scanner scammer {source};
     std::vector<Token> tokens = scammer.scanTokens();
+    Parser parser {tokens};
+    Expr* expression = parser.parse();
 
-    for (int i = 0; i < tokens.size(); i++){
-        std::cout << tokens[i].toString() << std::endl;
-    }
+    if(hadError) return;
+
+    std::cout << AstPrinter().print(expression) << std::endl;
 }
 
 void GlyphCast::error(int line, std::string message){
@@ -63,4 +69,13 @@ void GlyphCast::error(int line, std::string message){
 void GlyphCast::report(int line, std::string where, std::string message){
     std::cerr << "[line " << line << "] Error" << where << ": " << message << std::endl;
     hadError = true;
+}
+
+void GlyphCast::error(Token token, std::string message){
+    if(token.type == TokenType::END_OF_FILE){
+        report(token.line, " at end", message);
+    }
+    else{
+        report(token.line, " at '" + token.lexeme + "'", message);
+    }
 }

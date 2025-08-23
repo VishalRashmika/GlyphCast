@@ -9,6 +9,8 @@ add_executable(glyph
     src/GlyphCast.cpp
     src/Scanner.cpp
     src/Token.cpp
+    src/Utility.cpp
+    src/Parser.cpp
 )
 
 target_include_directories(glyph PRIVATE include)
