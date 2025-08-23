@@ -33,11 +33,16 @@ public:
             return std::any_cast<std::string>(expr->value);
         } else if (value_type == typeid(double)) {
             return std::to_string(std::any_cast<double>(expr->value));
+        } else if (value_type == typeid(int)) {
+            return std::to_string(std::any_cast<int>(expr->value));
+        } else if (value_type == typeid(float)) {
+            return std::to_string(std::any_cast<float>(expr->value));
         } else if (value_type == typeid(bool)) {
             return std::string(std::any_cast<bool>(expr->value) ? "true" : "false");
         }
 
-        return std::string("Error in visitLiteralExpr: literal type not recognized.");
+        // Debug: print the actual type name
+        return std::string("Error in visitLiteralExpr: literal type not recognized: " + std::string(value_type.name()));
     }
 
 private:
