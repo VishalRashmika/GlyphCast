@@ -11,6 +11,7 @@ add_executable(glyph
     src/Token.cpp
     src/Utility.cpp
     src/Parser.cpp
+    src/Interpreter.cpp
 )
 
 target_include_directories(glyph PRIVATE include)

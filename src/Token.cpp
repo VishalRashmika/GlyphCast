@@ -19,6 +19,8 @@ std::string Token::toString() {
         returnVal << std::any_cast<std::string>(literal);
     } else if (literal.type() == typeid(double)) {
         returnVal << std::any_cast<double>(literal);
+    } else if (literal.type() == typeid(float)) {
+        returnVal << std::any_cast<float>(literal);
     } else if (literal.type() == typeid(int)) {
         returnVal << std::any_cast<int>(literal);
     } else if (literal.type() == typeid(bool)) {

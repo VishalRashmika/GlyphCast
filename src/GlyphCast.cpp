@@ -10,6 +10,7 @@
 #include <fstream>
 
 bool GlyphCast::hadError = false;
+bool GlyphCast::hadRuntimeError = false;
 
 int main(int argc, char* argv[]){
     GlyphCast glyph;
@@ -38,6 +39,9 @@ void GlyphCast::runFile(std::string filePath){
     if(hadError){
         exit(EX_DATAERR);
     }
+    if (hadRuntimeError){
+        exit(EX_SOFTWARE);
+    }
 }
 
 void GlyphCast::runPrompt(){
@@ -59,7 +63,9 @@ void GlyphCast::run(std::string source){
 
     if(hadError) return;
 
-    std::cout << AstPrinter().print(expression) << std::endl;
+    Interpreter interpreter {};
+    // std::cout << AstPrinter().print(expression) << std::endl;
+    interpreter.interpret(expression);
 }
 
 void GlyphCast::error(int line, std::string message){
@@ -78,4 +84,9 @@ void GlyphCast::error(Token token, std::string message){
     else{
         report(token.line, " at '" + token.lexeme + "'", message);
     }
+}
+
+void GlyphCast::runtimeError(RuntimeError error){
+    std::cerr << error.what() << "\n[line " << error.token.line << "]\n" << std::endl;
+    hadRuntimeError = true;
 }
