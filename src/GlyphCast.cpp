@@ -28,11 +28,22 @@ int main(int argc, char* argv[]){
     return 0;
 }   
 
+
 void GlyphCast::runFile(std::string filePath){
     std::ifstream inputFile(filePath);
+    
+    if (!inputFile.is_open()) {
+        std::cerr << "ERROR: Could not open file: " << filePath << std::endl;
+        exit(EX_NOINPUT);
+    }
+    
     std::string fileData;
+    std::string line;
 
-    while(getline(inputFile,fileData)){}
+    while(getline(inputFile, line)){
+        fileData += line + "\n";
+    }
+    
     std::cout << "File Loaded Successfully" << std::endl;
     run(fileData);
     
@@ -55,17 +66,17 @@ void GlyphCast::runPrompt(){
     }
 }
 
+
 void GlyphCast::run(std::string source){
     Scanner scammer {source};
     std::vector<Token> tokens = scammer.scanTokens();
     Parser parser {tokens};
-    Expr* expression = parser.parse();
+    std::vector<Stmt*> statements = parser.parse();
 
     if(hadError) return;
 
     Interpreter interpreter {};
-    // std::cout << AstPrinter().print(expression) << std::endl;
-    interpreter.interpret(expression);
+    interpreter.interpret(statements);
 }
 
 void GlyphCast::error(int line, std::string message){

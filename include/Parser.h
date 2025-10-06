@@ -2,6 +2,7 @@
 
 #include "Token.h"
 #include "Expr.h"
+#include "Stmt.h"
 
 #include <vector>
 #include <string>
@@ -33,7 +34,14 @@ private:
     Token previous();
     ParseError error(Token token, std::string message);
     void synchronize();
-    
+    Stmt* statement();
+    Stmt* printStatement();
+    Stmt* expressionStatement();
+    Stmt* declaration();
+    Stmt* varDeclaration();
+    Expr* assignment();
+    std::vector<Stmt*> block();
+
     //multiple token types
     template<typename... T>
     bool match(TokenType first, T... rest);
@@ -41,5 +49,5 @@ private:
 
 public:
     Parser(std::vector<Token> tokens);
-    Expr* parse();
+    std::vector<Stmt*> parse();
 };
