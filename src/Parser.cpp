@@ -1,21 +1,96 @@
 # include "Parser.h"
-#include "GlyphCast.h"
+# include "GlyphCast.h"
+
+#include <memory>
 
 Parser::Parser(std::vector<Token> tokens){
     this->tokens = tokens;
 }
 
-Expr* Parser::parse(){
+std::vector<Stmt*> Parser::parse(){
+    std::vector<Stmt*> statements;
+
+    while(!isAtEnd()){
+        Stmt* stmt = declaration();
+        if(stmt != nullptr) {
+            statements.push_back(stmt);
+        }
+    }
+    return statements;
+}
+
+
+Expr* Parser::expression(){
+    return assignment();
+}
+
+Stmt* Parser::declaration(){
     try{
-        return expression();
+        if(match(TokenType::VAR)) return varDeclaration();
+        return statement();
     }
     catch(ParseError error){
-        return NULL;
+        synchronize();
+        return nullptr;
     }
 }
 
-Expr* Parser::expression(){
-    return equality();
+
+Stmt* Parser::statement(){
+    if(match(TokenType::PRINT)) return printStatement();
+    if(match(TokenType::LEFT_BRACE)) return new Block(block());
+
+    return expressionStatement();
+}
+
+Stmt* Parser::printStatement(){
+    Expr *expr = expression();
+    consume(TokenType::SEMICOLON, "Expect ';' after value.");
+    return new Print(expr);
+}
+
+Stmt* Parser::varDeclaration(){
+    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+    Expr* initializer = NULL;
+    if(match(TokenType::EQUAL)){
+        initializer = expression();
+    }
+
+    consume(TokenType::SEMICOLON, "Expect ';' after variable declaration.");
+    return new Var(name, initializer);
+}
+
+Stmt* Parser::expressionStatement(){
+    Expr *expr = expression();
+    consume(TokenType::SEMICOLON, "Expect ';' after expression.");
+    return new Expression(expr);
+}
+
+std::vector<Stmt*> Parser::block(){
+    std::vector<Stmt*> statements;
+
+    while(!check(TokenType::RIGHT_BRACE) && !isAtEnd()){
+        statements.push_back(declaration());
+    }
+
+    consume(TokenType::RIGHT_BRACE, "Expect '}' after block.");
+    return statements;
+}
+
+Expr* Parser::assignment(){
+    Expr* expr = equality();
+
+    if(match(TokenType::EQUAL)){
+        Token equals = previous();
+        Expr* value = assignment();
+
+        if(Variable* e = dynamic_cast<Variable*>(expr)){
+            Token name = e->name;
+            return new Assign(name, value);
+        }
+        error(equals, "Invalid assignment target.");
+    }
+    return expr;
 }
 
 Expr* Parser::equality(){
@@ -86,6 +161,10 @@ Expr* Parser::primary(){
         return new Literal(previous().literal);
     }
 
+    if(match(TokenType::IDENTIFIER)){
+        return new Variable(previous());
+    }
+
     if(match(TokenType::LEFT_PAREN)){
         Expr* expr = expression();
         consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
@@ -135,7 +214,8 @@ Token Parser::advance(){
 }
 
 bool Parser::isAtEnd(){
-    return peek().type == END_OF_FILE;
+    bool result = peek().type == END_OF_FILE;
+    return result;
 }
 
 Token Parser::peek(){
@@ -149,4 +229,25 @@ Token Parser::previous(){
 Parser::ParseError Parser::error(Token token, std::string message){
     GlyphCast::error(token, message);
     return ParseError(message);
+}
+
+void Parser::synchronize(){
+    advance();
+    
+    while(!isAtEnd()){
+        if(previous().type == TokenType::SEMICOLON) return;
+        
+        switch(peek().type){
+            case TokenType::CLASS:
+            case TokenType::FUN:
+            case TokenType::VAR:
+            case TokenType::FOR:
+            case TokenType::IF:
+            case TokenType::WHILE:
+            case TokenType::PRINT:
+            case TokenType::RETURN:
+                return;
+        }
+        advance();
+    }
 }

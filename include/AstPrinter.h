@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 
-class AstPrinter: public Visitor{
+class AstPrinter: public ExprVisitor{
 public:
     std::string print(Expr* expr){
         return std::any_cast<std::string>(expr->Accept(this));

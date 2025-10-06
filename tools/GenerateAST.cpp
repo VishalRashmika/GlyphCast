@@ -1,3 +1,12 @@
+/*
+
+For stmt.h,
+add the below line manually on top of the header file:
+
+#include "Expr.h"
+
+*/
+
 #include "Utility.h"
 
 #include <iostream>
@@ -5,34 +14,48 @@
 #include <vector>
 
 const std::string baseFileName = "Expr";
+const std::string stmtFileName = "Stmt";
 
 //forward decleration
 void ASTDefinition(std::string outputPath, std::string baseFileName, std::vector<std::string> expressionTypes);
-void visitorDefinition(std::ofstream& fileWriter, std::vector<std::string>& expressionTypes);
-void typeDefinition(std::ofstream&, std::string expressionName, std::string expressionContent);
+void visitorDefinition(std::ofstream& fileWriter, std::vector<std::string>& expressionTypes, std::string baseFileName);
+void typeDefinition(std::ofstream& fileWriter, std::string expressionName, std::string expressionContent, std::string FileName);
 
 int main(int argc, char* argv[]){
     // todo: input validation : should have atleast one parameter
     std::string outputPath = argv[1];
     std::vector<std::string> exprTypes;
+    std::vector<std::string> stmtTypes;
+
     exprTypes = {
+        "Assign   : Token name, Expr* value",
         "Binary   : Expr* left, Token op, Expr* right",
         "Grouping : Expr* expression",
         "Literal  : std::any value",
-        "Unary    : Token op, Expr* right"
+        "Unary    : Token op, Expr* right",
+        "Variable : Token name"
+    };
+
+    stmtTypes = {
+        "Block      : std::vector<Stmt*> statements",
+        "Expression : Expr* expression",
+        "Print      : Expr* expression",
+        "Var        : Token name, Expr* initializer"
     };
 
     ASTDefinition(outputPath, baseFileName, exprTypes);
-    std::cout << baseFileName << ".h Generated Successfully!!!" << std::endl;
+    ASTDefinition(outputPath, stmtFileName, stmtTypes);
+    std::cout << baseFileName << ".h & " << stmtFileName << ".h Generated Successfully!!!" << std::endl;
 }
 
 
-void ASTDefinition(std::string outputPath, std::string baseFileName, std::vector<std::string> expressionTypes){
-    std::string outputFilePath = outputPath + "/" + baseFileName + ".h";
+void ASTDefinition(std::string outputPath, std::string FileName, std::vector<std::string> expressionTypes){
+    std::string outputFilePath = outputPath + "/" + FileName + ".h";
     std::ofstream fileWriter(outputFilePath);
 
     fileWriter << "#pragma once\n" << std::endl;
     fileWriter << "#include \"Token.h\"\n" << std::endl;
+    fileWriter << "#include <vector>" << std::endl;
     fileWriter << "#include <any>\n" << std::endl;
 
     for (int i = 0; i < expressionTypes.size(); i++){
@@ -43,13 +66,13 @@ void ASTDefinition(std::string outputPath, std::string baseFileName, std::vector
     fileWriter << std::endl;
 
     // visitor code
-    visitorDefinition(fileWriter, expressionTypes);
+    visitorDefinition(fileWriter, expressionTypes, FileName);
 
     // The base class
-    fileWriter << "class " << baseFileName << "{" << std::endl;
+    fileWriter << "class " << FileName << "{" << std::endl;
     fileWriter << "public:" << std::endl;
-    fileWriter << "\tvirtual std::any Accept(Visitor* visitor) = 0;" << std::endl;
-    fileWriter << "\tvirtual ~" << baseFileName << "(){}" << std::endl;
+    fileWriter << "\tvirtual std::any Accept(" << FileName << "Visitor* visitor) = 0;" << std::endl;
+    fileWriter << "\tvirtual ~" << FileName << "(){}" << std::endl;
     fileWriter << "};" << std::endl;
     fileWriter << std::endl;
 
@@ -58,7 +81,7 @@ void ASTDefinition(std::string outputPath, std::string baseFileName, std::vector
         std::string expressionName = trim(split(expressionTypes[i], ": ")[0]);
         std::string expressionContent = trim(split(expressionTypes[i], ": ")[1]);
 
-        typeDefinition(fileWriter, expressionName, expressionContent);
+        typeDefinition(fileWriter, expressionName, expressionContent, FileName);
     }    
 
 
@@ -66,14 +89,14 @@ void ASTDefinition(std::string outputPath, std::string baseFileName, std::vector
 }
 
 
-void visitorDefinition(std::ofstream& fileWriter, std::vector<std::string>& expressionTypes){
-    fileWriter << "class Visitor{" << std::endl;
+void visitorDefinition(std::ofstream& fileWriter, std::vector<std::string>& expressionTypes, std::string FileName){
+    fileWriter << "class " << FileName << "Visitor{" << std::endl;
     fileWriter << "public:" << std::endl;
 
     for (int i = 0; i < expressionTypes.size(); i++){
         std::string visitExprName = trim(split(expressionTypes[i], ": ")[0]);
         
-        fileWriter << "\tvirtual std::any visit" << baseFileName << visitExprName;
+        fileWriter << "\tvirtual std::any visit" << FileName << visitExprName;
         fileWriter << "(" << visitExprName << "* expr) = 0;" << std::endl;
     }
 
@@ -81,8 +104,8 @@ void visitorDefinition(std::ofstream& fileWriter, std::vector<std::string>& expr
     fileWriter << std::endl;
 }
 
-void typeDefinition(std::ofstream& fileWriter, std::string expressionName, std::string expressionContent){
-    fileWriter << "class " << expressionName << ": public " << baseFileName << "{" << std::endl;
+void typeDefinition(std::ofstream& fileWriter, std::string expressionName, std::string expressionContent, std::string FileName){
+    fileWriter << "class " << expressionName << ": public " << FileName << "{" << std::endl;
     fileWriter << "public:" << std::endl;
 
     std::vector<std::string> fieldsContent = split(expressionContent, ", ");
@@ -99,8 +122,8 @@ void typeDefinition(std::ofstream& fileWriter, std::string expressionName, std::
     fileWriter << "\t}" << std::endl;
     fileWriter << std::endl;
 
-    fileWriter << "\tstd::any Accept(Visitor* visitor) override{" << std::endl;
-    fileWriter << "\t\treturn visitor->visit" << baseFileName << expressionName;
+    fileWriter << "\tstd::any Accept(" << FileName << "Visitor* visitor) override{" << std::endl;
+    fileWriter << "\t\treturn visitor->visit" << FileName << expressionName;
     fileWriter << "(this);" << std::endl;
     fileWriter << "\t}" << std::endl; 
 

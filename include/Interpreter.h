@@ -2,12 +2,15 @@
 
 #include "Expr.h"
 #include "GlyphCast.h"
+#include "Stmt.h"
+#include "Enviroment.h"
 
 #include <any>
 #include <string>
 #include <iostream>
+#include <vector>
 
-class Interpreter : public Visitor
+class Interpreter : public ExprVisitor, public StmtVisitor
 {
 private:
     void checkNumberOperand(Token oper, std::any operand);
@@ -17,10 +20,21 @@ private:
     std::string stringify(std::any object);
     std::any evaluate(Expr* expr);
 
+    void execute(Stmt* stmt);
+    // static Enviroment* enviroment;
+    Enviroment* enviroment = new Enviroment(); 
+
 public:
-    void interpret(Expr* expr);//
+    void interpret(std::vector<Stmt*> statements);
     std::any visitExprLiteral(Literal* expr) override;
     std::any visitExprUnary(Unary* expr) override;
     std::any visitExprGrouping(Grouping* expr) override;
     std::any visitExprBinary(Binary* expr) override;
+    std::any visitStmtExpression(Expression* stmt) override;
+    std::any visitStmtPrint(Print* stmt) override;
+    std::any visitStmtVar(Var* stmt) override;
+    std::any visitExprVariable(Variable* expr) override;
+    std::any visitExprAssign(Assign* expr) override;
+    std::any visitStmtBlock(Block* stmt) override;
+    void executeBlock(std::vector<Stmt*> statements, Enviroment* enviroment);
 };

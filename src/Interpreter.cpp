@@ -1,19 +1,79 @@
 #include "Interpreter.h"
 #include "RuntimeError.h"
 
-void Interpreter::interpret(Expr* expr){
+
+void Interpreter::interpret(std::vector<Stmt*> statements){
     try{
-        std::any value = evaluate(expr);
-        std::cout << stringify(value) << std::endl;
+        for(int i = 0; i < statements.size(); i++){
+            execute(statements[i]);
+        }
     }
     catch(RuntimeError error){
         GlyphCast::runtimeError(error);
     }
-    
 }
 
 std::any Interpreter::evaluate(Expr* expr) {
     return expr->Accept(this);
+}
+
+void Interpreter::execute(Stmt* stmt){
+    if(stmt != nullptr) {
+        stmt->Accept(this);
+    }
+}
+
+void Interpreter::executeBlock(std::vector<Stmt*> statements, Enviroment* enviroment){
+
+    Enviroment* previous = this->enviroment;
+
+    try{
+        this->enviroment = enviroment;
+
+        for(int i = 0; i < statements.size(); i++){
+            execute(statements[i]);
+        }
+        
+        this->enviroment = previous;
+    }
+    catch (...){
+        this->enviroment = previous;
+        throw;
+    }
+}
+
+
+std::any Interpreter::visitStmtBlock(Block* stmt){
+    Enviroment* env = new Enviroment(this->enviroment);
+    executeBlock(stmt->statements, env);
+    return {};
+}
+
+std::any Interpreter::visitStmtExpression(Expression* stmt){
+    evaluate(stmt->expression);
+    return {};
+}
+
+std::any Interpreter::visitStmtPrint(Print* stmt){
+    std::any value = evaluate(stmt->expression);
+    std::cout << stringify(value) << "\n";
+    return {};
+}
+
+std::any Interpreter::visitStmtVar(Var* stmt){
+    std::any value;
+    if(stmt->initializer != NULL){
+        value = evaluate(stmt->initializer);
+    }
+
+    enviroment->define(stmt->name.lexeme, value);
+    return {};
+}
+
+std::any Interpreter::visitExprAssign(Assign* expr){
+    std::any value = evaluate(expr->value);
+    enviroment->assign(expr->name, value);
+    return value;
 }
 
 std::any Interpreter::visitExprGrouping(Grouping* expr) {
@@ -37,6 +97,10 @@ std::any Interpreter::visitExprUnary(Unary* expr) {
     }
 
     return {};
+}
+
+std::any Interpreter::visitExprVariable(Variable* expr){
+    return enviroment->get(expr->name);
 }
 
 std::any Interpreter::visitExprBinary(Binary* expr) {

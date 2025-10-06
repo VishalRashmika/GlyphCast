@@ -2,25 +2,45 @@
 
 #include "Token.h"
 
+#include <vector>
 #include <any>
 
+class Assign;
 class Binary;
 class Grouping;
 class Literal;
 class Unary;
+class Variable;
 
-class Visitor{
+class ExprVisitor{
 public:
+	virtual std::any visitExprAssign(Assign* expr) = 0;
 	virtual std::any visitExprBinary(Binary* expr) = 0;
 	virtual std::any visitExprGrouping(Grouping* expr) = 0;
 	virtual std::any visitExprLiteral(Literal* expr) = 0;
 	virtual std::any visitExprUnary(Unary* expr) = 0;
+	virtual std::any visitExprVariable(Variable* expr) = 0;
 };
 
 class Expr{
 public:
-	virtual std::any Accept(Visitor* visitor) = 0;
+	virtual std::any Accept(ExprVisitor* visitor) = 0;
 	virtual ~Expr(){}
+};
+
+class Assign: public Expr{
+public:
+	Token name;
+	Expr* value;
+
+	Assign(Token name, Expr* value){
+		this->name = name;
+		this->value = value;
+	}
+
+	std::any Accept(ExprVisitor* visitor) override{
+		return visitor->visitExprAssign(this);
+	}
 };
 
 class Binary: public Expr{
@@ -35,7 +55,7 @@ public:
 		this->right = right;
 	}
 
-	std::any Accept(Visitor* visitor) override{
+	std::any Accept(ExprVisitor* visitor) override{
 		return visitor->visitExprBinary(this);
 	}
 };
@@ -48,7 +68,7 @@ public:
 		this->expression = expression;
 	}
 
-	std::any Accept(Visitor* visitor) override{
+	std::any Accept(ExprVisitor* visitor) override{
 		return visitor->visitExprGrouping(this);
 	}
 };
@@ -61,7 +81,7 @@ public:
 		this->value = value;
 	}
 
-	std::any Accept(Visitor* visitor) override{
+	std::any Accept(ExprVisitor* visitor) override{
 		return visitor->visitExprLiteral(this);
 	}
 };
@@ -76,8 +96,21 @@ public:
 		this->right = right;
 	}
 
-	std::any Accept(Visitor* visitor) override{
+	std::any Accept(ExprVisitor* visitor) override{
 		return visitor->visitExprUnary(this);
+	}
+};
+
+class Variable: public Expr{
+public:
+	Token name;
+
+	Variable(Token name){
+		this->name = name;
+	}
+
+	std::any Accept(ExprVisitor* visitor) override{
+		return visitor->visitExprVariable(this);
 	}
 };
 
