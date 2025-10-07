@@ -9,6 +9,7 @@ class Assign;
 class Binary;
 class Grouping;
 class Literal;
+class Logical;
 class Unary;
 class Variable;
 
@@ -18,6 +19,7 @@ public:
 	virtual std::any visitExprBinary(Binary* expr) = 0;
 	virtual std::any visitExprGrouping(Grouping* expr) = 0;
 	virtual std::any visitExprLiteral(Literal* expr) = 0;
+	virtual std::any visitExprLogical(Logical* expr) = 0;
 	virtual std::any visitExprUnary(Unary* expr) = 0;
 	virtual std::any visitExprVariable(Variable* expr) = 0;
 };
@@ -83,6 +85,23 @@ public:
 
 	std::any Accept(ExprVisitor* visitor) override{
 		return visitor->visitExprLiteral(this);
+	}
+};
+
+class Logical: public Expr{
+public:
+	Expr* left;
+	Token op;
+	Expr* right;
+
+	Logical(Expr* left, Token op, Expr* right){
+		this->left = left;
+		this->op = op;
+		this->right = right;
+	}
+
+	std::any Accept(ExprVisitor* visitor) override{
+		return visitor->visitExprLogical(this);
 	}
 };
 

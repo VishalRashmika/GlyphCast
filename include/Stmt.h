@@ -8,6 +8,7 @@
 
 class Block;
 class Expression;
+class If;
 class Print;
 class Var;
 
@@ -15,6 +16,7 @@ class StmtVisitor{
 public:
 	virtual std::any visitStmtBlock(Block* expr) = 0;
 	virtual std::any visitStmtExpression(Expression* expr) = 0;
+	virtual std::any visitStmtIf(If* expr) = 0;
 	virtual std::any visitStmtPrint(Print* expr) = 0;
 	virtual std::any visitStmtVar(Var* expr) = 0;
 };
@@ -48,6 +50,23 @@ public:
 
 	std::any Accept(StmtVisitor* visitor) override{
 		return visitor->visitStmtExpression(this);
+	}
+};
+
+class If: public Stmt{
+public:
+	Expr* condition;
+	Stmt* thenBranch;
+	Stmt* elseBranch;
+
+	If(Expr* condition, Stmt* thenBranch, Stmt* elseBranch){
+		this->condition = condition;
+		this->thenBranch = thenBranch;
+		this->elseBranch = elseBranch;
+	}
+
+	std::any Accept(StmtVisitor* visitor) override{
+		return visitor->visitStmtIf(this);
 	}
 };
 

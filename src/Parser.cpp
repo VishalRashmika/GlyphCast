@@ -37,10 +37,25 @@ Stmt* Parser::declaration(){
 
 
 Stmt* Parser::statement(){
+    if(match(TokenType::IF)) return ifStatement();
     if(match(TokenType::PRINT)) return printStatement();
     if(match(TokenType::LEFT_BRACE)) return new Block(block());
 
     return expressionStatement();
+}
+
+Stmt* Parser::ifStatement(){
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'.");
+    Expr* condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after if condition.");
+
+    Stmt* thenBranch = statement();
+    Stmt* elseBranch = NULL;
+    if(match(TokenType::ELSE)){
+        elseBranch = statement();
+    }
+
+    return new If(condition, thenBranch, elseBranch);
 }
 
 Stmt* Parser::printStatement(){
@@ -78,7 +93,7 @@ std::vector<Stmt*> Parser::block(){
 }
 
 Expr* Parser::assignment(){
-    Expr* expr = equality();
+    Expr* expr = _or();
 
     if(match(TokenType::EQUAL)){
         Token equals = previous();
@@ -89,6 +104,28 @@ Expr* Parser::assignment(){
             return new Assign(name, value);
         }
         error(equals, "Invalid assignment target.");
+    }
+    return expr;
+}
+
+Expr* Parser::_or(){
+    Expr* expr = _and();
+
+    while(match(TokenType::OR)){
+        Token oper = previous();
+        Expr* right = _and();
+        expr = new Logical(expr, oper, right);
+    }
+    return expr;
+}
+
+Expr* Parser::_and(){
+    Expr* expr = equality();
+
+    while(match(TokenType::AND)){
+        Token oper = previous();
+        Expr* right = equality();
+        expr = new Logical(expr, oper, right);
     }
     return expr;
 }
@@ -154,7 +191,7 @@ Expr* Parser::primary(){
         return new Literal(true);
     }
     if(match(TokenType::NIL)){
-        return new Literal(NULL);
+        return new Literal(std::any());
     }
 
     if(match(TokenType::NUMBER, TokenType::STRING)){

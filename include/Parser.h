@@ -41,6 +41,9 @@ private:
     Stmt* varDeclaration();
     Expr* assignment();
     std::vector<Stmt*> block();
+    Stmt* ifStatement();
+    Expr* _or();
+    Expr* _and();
 
     //multiple token types
     template<typename... T>
