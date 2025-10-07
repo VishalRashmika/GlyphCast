@@ -44,6 +44,8 @@ private:
     Stmt* ifStatement();
     Expr* _or();
     Expr* _and();
+    Stmt* whileStatement();
+    Stmt* forStatement();
 
     //multiple token types
     template<typename... T>
