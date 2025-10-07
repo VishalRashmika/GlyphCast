@@ -21,7 +21,7 @@ private:
     std::any evaluate(Expr* expr);
 
     void execute(Stmt* stmt);
-    // static Enviroment* enviroment;
+    
     Enviroment* enviroment = new Enviroment(); 
 
 public:
@@ -37,4 +37,7 @@ public:
     std::any visitExprAssign(Assign* expr) override;
     std::any visitStmtBlock(Block* stmt) override;
     void executeBlock(std::vector<Stmt*> statements, Enviroment* enviroment);
+    std::any visitStmtIf(If* stmt) override;
+    std::any visitExprLogical(Logical* expr) override;
+    std::any visitStmtWhile(While* stmt) override;
 };

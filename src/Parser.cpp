@@ -37,10 +37,78 @@ Stmt* Parser::declaration(){
 
 
 Stmt* Parser::statement(){
+    if(match(TokenType::FOR)) return forStatement();
+    if(match(TokenType::IF)) return ifStatement();
     if(match(TokenType::PRINT)) return printStatement();
+    if(match(TokenType::WHILE)) return whileStatement();
     if(match(TokenType::LEFT_BRACE)) return new Block(block());
 
     return expressionStatement();
+}
+
+Stmt* Parser::forStatement(){
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
+
+    Stmt* initializer;
+
+    if(match(TokenType::SEMICOLON)){
+        initializer = nullptr;
+    }
+    else if (match(TokenType::VAR)){
+        initializer = varDeclaration();
+    }
+    else{
+        initializer = expressionStatement();
+    }
+
+    Expr* condition = nullptr;
+    if(!check(TokenType::SEMICOLON)){
+        condition = expression();
+    }
+    consume(TokenType::SEMICOLON, "Expect ';' after loop condition.");
+
+    Expr* increment = nullptr;
+    if(!check(TokenType::RIGHT_PAREN)){
+        increment = expression();
+    }
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
+
+    Stmt* body = statement();
+
+    if (increment != nullptr) {
+        std::vector<Stmt*> blockStatements;
+        blockStatements.push_back(body);
+        blockStatements.push_back(new Expression(increment));
+        
+        body = new Block(blockStatements);
+    }
+
+    if (condition == nullptr) condition = new Literal(true);
+    body = new While(condition, body);
+
+    if (initializer != nullptr) {
+        std::vector<Stmt*> blockStatements;
+        blockStatements.push_back(initializer);
+        blockStatements.push_back(body);
+        
+        body = new Block(blockStatements);
+    }
+
+    return body;
+}
+
+Stmt* Parser::ifStatement(){
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'.");
+    Expr* condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after if condition.");
+
+    Stmt* thenBranch = statement();
+    Stmt* elseBranch = NULL;
+    if(match(TokenType::ELSE)){
+        elseBranch = statement();
+    }
+
+    return new If(condition, thenBranch, elseBranch);
 }
 
 Stmt* Parser::printStatement(){
@@ -58,6 +126,15 @@ Stmt* Parser::varDeclaration(){
 
     consume(TokenType::SEMICOLON, "Expect ';' after variable declaration.");
     return new Var(name, initializer);
+}
+
+Stmt* Parser::whileStatement(){
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'while'.");
+    Expr* condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
+    Stmt* body = statement();
+
+    return new While(condition, body);
 }
 
 Stmt* Parser::expressionStatement(){
@@ -78,7 +155,7 @@ std::vector<Stmt*> Parser::block(){
 }
 
 Expr* Parser::assignment(){
-    Expr* expr = equality();
+    Expr* expr = _or();
 
     if(match(TokenType::EQUAL)){
         Token equals = previous();
@@ -89,6 +166,28 @@ Expr* Parser::assignment(){
             return new Assign(name, value);
         }
         error(equals, "Invalid assignment target.");
+    }
+    return expr;
+}
+
+Expr* Parser::_or(){
+    Expr* expr = _and();
+
+    while(match(TokenType::OR)){
+        Token oper = previous();
+        Expr* right = _and();
+        expr = new Logical(expr, oper, right);
+    }
+    return expr;
+}
+
+Expr* Parser::_and(){
+    Expr* expr = equality();
+
+    while(match(TokenType::AND)){
+        Token oper = previous();
+        Expr* right = equality();
+        expr = new Logical(expr, oper, right);
     }
     return expr;
 }
@@ -154,7 +253,7 @@ Expr* Parser::primary(){
         return new Literal(true);
     }
     if(match(TokenType::NIL)){
-        return new Literal(NULL);
+        return new Literal(std::any());
     }
 
     if(match(TokenType::NUMBER, TokenType::STRING)){

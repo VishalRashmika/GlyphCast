@@ -54,6 +54,16 @@ std::any Interpreter::visitStmtExpression(Expression* stmt){
     return {};
 }
 
+std::any Interpreter::visitStmtIf(If* stmt){
+    if(isTruthy(evaluate(stmt->condition))){
+        execute(stmt->thenBranch);
+    }
+    else if (stmt->elseBranch != NULL){
+        execute(stmt->elseBranch);
+    }
+    return {};
+}
+
 std::any Interpreter::visitStmtPrint(Print* stmt){
     std::any value = evaluate(stmt->expression);
     std::cout << stringify(value) << "\n";
@@ -70,6 +80,13 @@ std::any Interpreter::visitStmtVar(Var* stmt){
     return {};
 }
 
+std::any Interpreter::visitStmtWhile(While* stmt){
+    while (isTruthy(evaluate(stmt->condition))){
+        execute(stmt->body);
+    }
+    return {};
+}
+
 std::any Interpreter::visitExprAssign(Assign* expr){
     std::any value = evaluate(expr->value);
     enviroment->assign(expr->name, value);
@@ -82,6 +99,21 @@ std::any Interpreter::visitExprGrouping(Grouping* expr) {
 
 std::any Interpreter::visitExprLiteral(Literal* expr) {
     return expr->value;
+}
+
+std::any Interpreter::visitExprLogical(Logical* expr){
+    std::any left = evaluate(expr->left);
+    
+    if(expr->op.type == TokenType::OR){
+        if(isTruthy(left)) return left;
+    }
+    else {
+        if (!isTruthy(left)) return left;
+    }
+
+    std::any right = evaluate(expr->right);
+    
+    return right;
 }
 
 std::any Interpreter::visitExprUnary(Unary* expr) {
@@ -158,7 +190,7 @@ void Interpreter::checkNumberOperands(Token oper, std::any left, std::any right)
 }
 
 bool Interpreter::isTruthy(std::any object){
-    if (object.type() == typeid(nullptr)) return false;
+    if (!object.has_value()) return false;  // Empty std::any is falsy
     if (object.type() == typeid(bool)) {
         return std::any_cast<bool>(object);
     }
@@ -166,6 +198,10 @@ bool Interpreter::isTruthy(std::any object){
 }
 
 bool Interpreter::isEqual(std::any a, std::any b){
+    ///////////////////////////////////////
+    if (!a.has_value() && !b.has_value()) return true;
+    if (!a.has_value() || !b.has_value()) return false;
+    ////////////////////////////////////////////////
     if (a.type() == typeid(nullptr) && b.type() == typeid(nullptr)) {
         return true;
     }
@@ -195,9 +231,26 @@ std::string Interpreter::stringify(std::any object){
         return text;
     }
 
+    if (object.type() == typeid(double)) {
+        std::string text = std::to_string(std::any_cast<double>(object));
+        if (text[text.length() - 2] == '.' && text[text.length() - 1] == '0') {
+            text = text.substr(0, text.length() - 2);
+        }
+        return text;
+    }
+
+    if (object.type() == typeid(int)) {
+        return std::to_string(std::any_cast<int>(object));
+    }
+
+    if (object.type() == typeid(long)) {
+        return std::to_string(std::any_cast<long>(object));
+    }
+
     if (object.type() == typeid(std::string)) {
         return std::any_cast<std::string>(object);
     }
+    
     if (object.type() == typeid(bool)) {
         return std::any_cast<bool>(object) ? "true" : "false";
     }
