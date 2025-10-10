@@ -177,7 +177,18 @@ std::any Interpreter::visitExprBinary(Binary* expr) {
     }
 
     return {};
-}  
+}
+
+std::any Interpreter::visitExprCall(Call* expr){
+    std::any callee = evaluate(expr->callee);
+
+    std::vector<std::any> Arguments;
+    for(int i = 0; i < expr->arguments.size(); i++){
+        Arguments.push_back(evaluate(expr->arguments[i]));
+    }
+
+    // todo: Implementation of the LoxCallable class
+}
 
 void Interpreter::checkNumberOperand(Token oper, std::any operand){
     if (operand.type() == typeid(float)) return;

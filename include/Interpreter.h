@@ -40,4 +40,5 @@ public:
     std::any visitStmtIf(If* stmt) override;
     std::any visitExprLogical(Logical* expr) override;
     std::any visitStmtWhile(While* stmt) override;
+    std::any visitExprCall(Call* expr) override;
 };

@@ -47,6 +47,9 @@ private:
     Stmt* whileStatement();
     Stmt* forStatement();
 
+    Expr* call();
+    Expr* finishCall(Expr* callee);
+
     //multiple token types
     template<typename... T>
     bool match(TokenType first, T... rest);
