@@ -46,9 +46,12 @@ private:
     Expr* _and();
     Stmt* whileStatement();
     Stmt* forStatement();
+    Function* function(std::string kind);
 
     Expr* call();
     Expr* finishCall(Expr* callee);
+
+    Stmt* returnStatement();
 
     //multiple token types
     template<typename... T>

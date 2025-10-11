@@ -22,9 +22,11 @@ private:
 
     void execute(Stmt* stmt);
     
-    Enviroment* enviroment = new Enviroment(); 
+    Enviroment* globals = new Enviroment();
 
 public:
+    Enviroment* enviroment = globals; 
+    Interpreter();
     void interpret(std::vector<Stmt*> statements);
     std::any visitExprLiteral(Literal* expr) override;
     std::any visitExprUnary(Unary* expr) override;
@@ -41,4 +43,6 @@ public:
     std::any visitExprLogical(Logical* expr) override;
     std::any visitStmtWhile(While* stmt) override;
     std::any visitExprCall(Call* expr) override;
+    std::any visitStmtFunction(Function* stmt) override;
+    std::any visitStmtReturn(Return* stmt) override;
 };

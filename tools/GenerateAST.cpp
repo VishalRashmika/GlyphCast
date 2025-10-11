@@ -41,8 +41,10 @@ int main(int argc, char* argv[]){
     stmtTypes = {
         "Block      : std::vector<Stmt*> statements",
         "Expression : Expr* expression",
+        "Function   : Token name, std::vector<Token> params, std::vector<Stmt*> body",
         "If         : Expr* condition, Stmt* thenBranch, Stmt* elseBranch",
         "Print      : Expr* expression",
+        "Return     : Token keyword, Expr* value",
         "Var        : Token name, Expr* initializer",
         "While      : Expr* condition, Stmt* body"
     };
