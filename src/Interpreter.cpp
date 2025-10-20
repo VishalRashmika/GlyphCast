@@ -1,10 +1,17 @@
 #include "Interpreter.h"
 #include "RuntimeError.h"
+#include "GlyphCallable.h"
+#include "ClockCallable.h"
+#include "GlyphFunction.h"
+#include "ReturnException.h"
 
+Interpreter::Interpreter() {
+    globals->define("clock", std::make_any<GlyphCallable*>(new ClockCallable()));
+}
 
 void Interpreter::interpret(std::vector<Stmt*> statements){
     try{
-        for(int i = 0; i < statements.size(); i++){
+        for(size_t i = 0; i < statements.size(); i++){
             execute(statements[i]);
         }
     }
@@ -30,7 +37,7 @@ void Interpreter::executeBlock(std::vector<Stmt*> statements, Enviroment* enviro
     try{
         this->enviroment = enviroment;
 
-        for(int i = 0; i < statements.size(); i++){
+        for(size_t i = 0; i < statements.size(); i++){
             execute(statements[i]);
         }
         
@@ -52,6 +59,21 @@ std::any Interpreter::visitStmtBlock(Block* stmt){
 std::any Interpreter::visitStmtExpression(Expression* stmt){
     evaluate(stmt->expression);
     return {};
+}
+
+std::any Interpreter::visitStmtFunction(Function* stmt){
+    GlyphFunction* function = new GlyphFunction(stmt, enviroment);
+    enviroment->define(stmt->name.lexeme, std::make_any<GlyphCallable*>(function));
+    return std::any();
+}
+
+std::any Interpreter::visitStmtReturn(Return* stmt){
+    std::any value = std::any();
+    if(stmt->value != NULL){
+        value = evaluate(stmt->value);
+    }
+
+    throw ReturnException(value);
 }
 
 std::any Interpreter::visitStmtIf(If* stmt){
@@ -177,7 +199,29 @@ std::any Interpreter::visitExprBinary(Binary* expr) {
     }
 
     return {};
-}  
+}
+
+std::any Interpreter::visitExprCall(Call* expr){
+    std::any callee = evaluate(expr->callee);
+
+    std::vector<std::any> Arguments;
+    for(size_t i = 0; i < expr->arguments.size(); i++){
+        Arguments.push_back(evaluate(expr->arguments[i]));
+    }
+
+    if (callee.type() != typeid(GlyphCallable*)) {
+        throw RuntimeError(expr->paren, "Can only call functions and classes.");
+    }
+
+    GlyphCallable* function = std::any_cast<GlyphCallable*>(callee);
+
+    if(Arguments.size() != static_cast<size_t>(function->arity())){
+        throw RuntimeError(expr->paren, "Expected " + std::to_string(function->arity()) + 
+                          " arguments but got " + std::to_string(Arguments.size()) + ".");
+    }
+
+    return function->call(*this, Arguments);
+}
 
 void Interpreter::checkNumberOperand(Token oper, std::any operand){
     if (operand.type() == typeid(float)) return;
@@ -190,7 +234,7 @@ void Interpreter::checkNumberOperands(Token oper, std::any left, std::any right)
 }
 
 bool Interpreter::isTruthy(std::any object){
-    if (!object.has_value()) return false;  // Empty std::any is falsy
+    if (!object.has_value()) return false;
     if (object.type() == typeid(bool)) {
         return std::any_cast<bool>(object);
     }
@@ -198,10 +242,9 @@ bool Interpreter::isTruthy(std::any object){
 }
 
 bool Interpreter::isEqual(std::any a, std::any b){
-    ///////////////////////////////////////
     if (!a.has_value() && !b.has_value()) return true;
     if (!a.has_value() || !b.has_value()) return false;
-    ////////////////////////////////////////////////
+    
     if (a.type() == typeid(nullptr) && b.type() == typeid(nullptr)) {
         return true;
     }
@@ -253,6 +296,10 @@ std::string Interpreter::stringify(std::any object){
     
     if (object.type() == typeid(bool)) {
         return std::any_cast<bool>(object) ? "true" : "false";
+    }
+
+    if (object.type() == typeid(GlyphCallable*)) {
+        return std::any_cast<GlyphCallable*>(object)->toString();
     }
 
     return "Error in stringify: object type not recognized.";

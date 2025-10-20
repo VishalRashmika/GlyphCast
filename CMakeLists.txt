@@ -13,6 +13,7 @@ add_executable(glyph
     src/Parser.cpp
     src/Interpreter.cpp
     src/Enviroment.cpp
+    src/GlyphFunction.cpp
 )
 
 target_include_directories(glyph PRIVATE include)

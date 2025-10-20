@@ -30,6 +30,7 @@ int main(int argc, char* argv[]){
     exprTypes = {
         "Assign   : Token name, Expr* value",
         "Binary   : Expr* left, Token op, Expr* right",
+        "Call     : Expr* callee, Token paren, std::vector<Expr*> arguments",
         "Grouping : Expr* expression",
         "Literal  : std::any value",
         "Logical  : Expr* left, Token op, Expr* right",
@@ -40,8 +41,10 @@ int main(int argc, char* argv[]){
     stmtTypes = {
         "Block      : std::vector<Stmt*> statements",
         "Expression : Expr* expression",
+        "Function   : Token name, std::vector<Token> params, std::vector<Stmt*> body",
         "If         : Expr* condition, Stmt* thenBranch, Stmt* elseBranch",
         "Print      : Expr* expression",
+        "Return     : Token keyword, Expr* value",
         "Var        : Token name, Expr* initializer",
         "While      : Expr* condition, Stmt* body"
     };
@@ -60,6 +63,10 @@ void ASTDefinition(std::string outputPath, std::string FileName, std::vector<std
     fileWriter << "#include \"Token.h\"\n" << std::endl;
     fileWriter << "#include <vector>" << std::endl;
     fileWriter << "#include <any>\n" << std::endl;
+
+    if (FileName == "Stmt"){
+        fileWriter << "#include \"Expr.h\"\n" << std::endl;
+    }
 
     for (int i = 0; i < expressionTypes.size(); i++){
         std::string exprClassName = trim(split(expressionTypes[i], ": ")[0]);
